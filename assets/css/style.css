@@ -1,0 +1,83 @@
+:root{
+  --ink:#1c2230; --muted:#5a6376; --bg:#ffffff; --soft:#f4f5f8;
+  --line:#e2e5ec; --accent:#3a4a7a; --accent-dark:#26325a; --maxw:820px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Georgia,"Times New Roman",serif;color:var(--ink);
+  background:var(--bg);line-height:1.65;font-size:18px}
+.container{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+.content{padding:38px 20px 60px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+img{max-width:100%;height:auto}
+h1,h2,h3{line-height:1.25;color:var(--accent-dark);font-weight:600}
+h2{margin-top:1.8em;border-bottom:1px solid var(--line);padding-bottom:.3em}
+p{margin:0 0 1.1em}
+ul,ol{margin:0 0 1.1em;padding-left:1.4em}
+li{margin:.25em 0}
+.skip{position:absolute;left:-999px}
+.skip:focus{left:8px;top:8px;background:#fff;padding:8px;z-index:10}
+
+/* header */
+.site-header{background:var(--accent-dark);color:#fff;position:sticky;top:0;z-index:5}
+.header-inner{display:flex;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;color:#fff;font-weight:600}
+.brand:hover{text-decoration:none}
+.brand-logo{width:34px;height:34px}
+.brand-name{font-size:1.15rem;letter-spacing:.02em}
+.site-nav{margin-left:auto;display:flex;gap:20px;flex-wrap:wrap}
+.site-nav a{color:#d7ddf0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-size:.95rem;letter-spacing:.02em}
+.site-nav a:hover,.site-nav a.active{color:#fff;text-decoration:none}
+.navtoggle,.navtoggle-btn{display:none}
+
+/* home */
+.hero{text-align:center;padding:34px 0 8px}
+.hero-logo{width:96px;height:96px}
+.hero h1{font-size:2.4rem;margin:.35em 0 .1em}
+.hero-tag{color:var(--muted);font-style:italic;font-size:1.15rem;margin:0}
+.home-quote{font-size:1.2rem;text-align:center;color:var(--accent-dark);
+  max-width:640px;margin:28px auto;font-style:italic}
+.home-intro{color:var(--ink)}
+.home-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:30px 0 10px}
+.btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 22px;border-radius:4px;
+  font-family:system-ui,sans-serif;font-size:1rem}
+.btn:hover{background:var(--accent-dark);text-decoration:none}
+
+/* misc content helpers carried from the old theme */
+.largefont{font-size:1.08rem}
+ol.membersclass,ul.regular,ol.olnumbers{}
+ol.membersclass li{margin:.35em 0}
+
+/* forms */
+.vx-form{margin:1.5em 0;max-width:640px}
+.vx-form .field{margin-bottom:1.1em}
+.vx-form label{display:block;font-family:system-ui,sans-serif;font-size:.95rem;
+  font-weight:600;margin-bottom:.35em;color:var(--accent-dark)}
+.vx-form input[type=text],.vx-form input[type=email],.vx-form input[type=url],
+.vx-form textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:4px;
+  font:inherit;font-size:1rem;background:var(--soft)}
+.vx-form textarea{resize:vertical}
+.vx-form .radio-group{display:flex;gap:18px;flex-wrap:wrap}
+.vx-form label.radio{font-weight:400;display:inline-flex;align-items:center;gap:6px}
+.vx-form button{background:var(--accent);color:#fff;border:0;padding:12px 28px;border-radius:4px;
+  font-family:system-ui,sans-serif;font-size:1rem;cursor:pointer}
+.vx-form button:hover{background:var(--accent-dark)}
+.req{color:#b23}
+.form-note{font-family:system-ui,sans-serif;font-size:.85rem;color:var(--muted)}
+.form-thanks{background:var(--soft);border:1px solid var(--line);padding:20px;border-radius:6px}
+
+/* footer */
+.site-footer{background:var(--soft);border-top:1px solid var(--line);
+  margin-top:40px;padding:26px 0;color:var(--muted)}
+.footer-tag{margin:0 0 .4em;font-size:.95rem}
+.footer-links{margin:0;font-family:system-ui,sans-serif;font-size:.9rem}
+
+@media(max-width:680px){
+  body{font-size:17px}
+  .navtoggle-btn{display:inline-block;margin-left:auto;font-size:1.6rem;
+    cursor:pointer;color:#fff;line-height:1;padding:4px 8px}
+  .site-nav{display:none;flex-direction:column;width:100%;gap:10px;padding:10px 0 4px;margin:0}
+  .navtoggle:checked ~ .site-nav{display:flex}
+}
