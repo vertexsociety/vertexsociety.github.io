@@ -88,6 +88,13 @@ ol.membersclass li{margin:.38em 0}
 .card p{color:var(--muted);font-size:1rem;margin:0 0 1em;line-height:1.5}
 .card .arrow{font-family:var(--sans);text-transform:uppercase;letter-spacing:.08em;
   font-size:.78rem;font-weight:700;color:var(--yale)}
+.dedication{background:var(--soft);border-top:1px solid var(--line);
+  padding:60px 26px;text-align:center}
+.dedication .container{max-width:820px}
+.dedication-text{font-family:var(--serif);font-style:italic;font-size:1.35rem;
+  line-height:1.55;color:var(--yale-dk);margin:0 0 .9em}
+.dedication-by{font-family:var(--sans);font-size:.95rem;color:var(--muted);margin:0}
+.dedication-by a{color:var(--yale)}
 
 /* ---- forms ---- */
 .vx-form{margin:1.6em 0;max-width:640px}
@@ -112,8 +119,13 @@ ol.membersclass li{margin:.38em 0}
   padding:22px 24px;border-radius:3px}
 
 /* ---- footer ---- */
-.site-footer{background:var(--yale-dker);color:#c3d0e2;margin-top:0;padding:52px 0 28px}
-.footer-inner{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.site-footer{background:var(--yale-dker);color:#c3d0e2;margin-top:0;padding:0 0 28px}
+.footer-motto{text-align:center;padding:44px 26px 40px;border-bottom:1px solid rgba(255,255,255,.14)}
+.motto-la{font-family:var(--serif);font-style:italic;font-size:1.35rem;color:#fff;margin:0 0 .3em}
+.motto-en{font-family:var(--serif);font-size:1.05rem;color:#c3d0e2;margin:0 0 .5em}
+.motto-cap{font-family:var(--sans);text-transform:uppercase;letter-spacing:.16em;
+  font-size:.72rem;color:var(--gold);margin:0}
+.footer-inner{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;padding-top:44px}
 .footer-name{font-family:var(--serif);font-size:1.5rem;color:#fff}
 .footer-brand p{margin:.6em 0 0;font-size:.92rem;line-height:1.5;color:#9fb2cc}
 .footer-links{display:flex;flex-direction:column;gap:11px}

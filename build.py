@@ -263,33 +263,95 @@ NAV = [  # (label, target page id)
 ]
 FOOTER = [("Dedication", 504), ("FAQ", 79), ("Distinguished Fellows Selection", 294)]
 
-def _href(routes, prefix, pid):
+# The site is hosted at a fixed root domain (vertexsociety.github.io), so all
+# links are absolute ("/about/", "/assets/..."). That lets the header and footer
+# be single shared partials injected into every page at runtime by include.js —
+# edit assets/partials/*.html once and every page updates, no rebuild needed.
+MOTTO_LA = "Felix qui potest rerum cognoscere causas."
+MOTTO_EN = "Fortunate is he, who is able to know the causes of things."
+
+def abs_href(routes, pid):
     d = routes[pid]
-    return prefix + d if d else (prefix or "./")
+    return "/" + d if d else "/"
 
-def nav_html(routes, prefix, current_id):
-    out = []
-    for label, pid in NAV:
-        cls = ' class="active"' if pid == current_id else ""
-        out.append(f'<a{cls} href="{_href(routes, prefix, pid)}">{label}</a>')
-    return "\n".join(out)
+# ---- shared modules (written once to assets/, injected on every page) --------
+def render_header(routes):
+    links = "\n".join(
+        f'      <a href="{abs_href(routes, pid)}">{label}</a>' for label, pid in NAV)
+    return f"""<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/assets/img/logo.png" alt="">
+      <span class="brand-name">{SITE_NAME}</span>
+    </a>
+    <input type="checkbox" id="navtoggle" class="navtoggle">
+    <label for="navtoggle" class="navtoggle-btn" aria-label="Menu">&#9776;</label>
+    <nav class="site-nav">
+{links}
+    </nav>
+  </div>
+</header>
+"""
 
-def footer_nav(routes, prefix):
+def render_footer(routes):
     items = NAV[1:] + FOOTER  # skip Home
-    return "\n".join(
-        f'<a href="{_href(routes, prefix, pid)}">{label}</a>' for label, pid in items)
+    links = "\n".join(
+        f'      <a href="{abs_href(routes, pid)}">{label}</a>' for label, pid in items)
+    return f"""<footer class="site-footer">
+  <div class="container footer-motto">
+    <p class="motto-la">{MOTTO_LA}</p>
+    <p class="motto-en">{MOTTO_EN}</p>
+    <p class="motto-cap">Vertex Society motto</p>
+  </div>
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="footer-name">{SITE_NAME}</span>
+      <p>{SITE_DESC}.<br>Founded 2006.</p>
+    </div>
+    <nav class="footer-links">
+{links}
+    </nav>
+  </div>
+  <div class="container footer-bottom">
+    <p>&copy; 2006&ndash;2026 {SITE_NAME}. An International Nonprofit Association.</p>
+  </div>
+</footer>
+"""
 
-def page_banner(title, prefix):
+# Injects [data-include] partials, then marks the active nav item. Kept tiny and
+# dependency-free; the mobile menu is pure CSS so it works even before this runs.
+INCLUDE_JS = r"""(function () {
+  function markActive() {
+    var here = location.pathname.replace(/index\.html$/, '') || '/';
+    var links = document.querySelectorAll('.site-nav a');
+    for (var i = 0; i < links.length; i++) {
+      var p = links[i].pathname.replace(/index\.html$/, '') || '/';
+      if (p === here) links[i].classList.add('active');
+    }
+  }
+  var nodes = document.querySelectorAll('[data-include]');
+  var pending = nodes.length;
+  if (!pending) { markActive(); return; }
+  Array.prototype.forEach.call(nodes, function (el) {
+    fetch(el.getAttribute('data-include'))
+      .then(function (r) { return r.text(); })
+      .then(function (html) { el.insertAdjacentHTML('afterend', html); })
+      .catch(function () {})
+      .then(function () { el.remove(); if (--pending === 0) markActive(); });
+  });
+})();"""
+
+def page_banner(title):
     """Blue title band with the skyline faintly behind — used on interior pages."""
-    return f"""<section class="banner" style="background-image:url({prefix}assets/img/skyline.jpg)">
+    return f"""<section class="banner" style="background-image:url(/assets/img/skyline.jpg)">
   <div class="container banner-inner">
     <p class="kicker">Vertex Society</p>
     <h1>{html.escape(title)}</h1>
   </div>
 </section>"""
 
-def home_hero(prefix, routes):
-    return f"""<section class="hero" style="background-image:url({prefix}assets/img/skyline.jpg)">
+def home_hero(routes):
+    return f"""<section class="hero" style="background-image:url(/assets/img/skyline.jpg)">
   <div class="container hero-inner">
     <p class="kicker">{SITE_DESC}</p>
     <h1>Order out of chaos.</h1>
@@ -297,14 +359,13 @@ def home_hero(prefix, routes):
       (sd16) &mdash; a rarity of 1 in 11,000 &mdash; by professional, standardized,
       supervised tests of intelligence only.</p>
     <p class="hero-cta">
-      <a class="btn btn-solid" href="{_href(routes, prefix, 31)}">Admission</a>
-      <a class="btn btn-ghost" href="{_href(routes, prefix, 32)}">Meet the Fellows</a>
+      <a class="btn btn-solid" href="{abs_href(routes, 31)}">Admission</a>
+      <a class="btn btn-ghost" href="{abs_href(routes, 32)}">Meet the Fellows</a>
     </p>
   </div>
 </section>"""
 
-def page_template(title, hero, body, prefix, routes, current_id):
-    home = prefix or "./"
+def page_template(title, hero, body):
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -312,42 +373,18 @@ def page_template(title, hero, body, prefix, routes, current_id):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} — {SITE_NAME}</title>
 <meta name="description" content="{SITE_DESC}">
-<link rel="icon" href="{prefix}assets/img/logo.png">
-<link rel="stylesheet" href="{prefix}assets/css/style.css">
+<link rel="icon" href="/assets/img/logo.png">
+<link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="{home}">
-      <img class="brand-logo" src="{prefix}assets/img/logo.png" alt="">
-      <span class="brand-name">{SITE_NAME}</span>
-    </a>
-    <input type="checkbox" id="navtoggle" class="navtoggle">
-    <label for="navtoggle" class="navtoggle-btn" aria-label="Menu">&#9776;</label>
-    <nav class="site-nav">
-{nav_html(routes, prefix, current_id)}
-    </nav>
-  </div>
-</header>
+<div data-include="/assets/partials/header.html"></div>
 {hero}
 <main id="main">
 {body}
 </main>
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <div class="footer-brand">
-      <span class="footer-name">{SITE_NAME}</span>
-      <p>{SITE_DESC}.<br>Founded 2006.</p>
-    </div>
-    <nav class="footer-links">
-{footer_nav(routes, prefix)}
-    </nav>
-  </div>
-  <div class="container footer-bottom">
-    <p>&copy; 2006&ndash;2026 {SITE_NAME}. An International Nonprofit Association.</p>
-  </div>
-</footer>
+<div data-include="/assets/partials/footer.html"></div>
+<script src="/assets/js/include.js" defer></script>
 </body>
 </html>
 """
@@ -355,15 +392,21 @@ def page_template(title, hero, body, prefix, routes, current_id):
 # ----------------------------------------------------------------------------
 # 7. Home page (WP front page has no content) — compose a landing page
 # ----------------------------------------------------------------------------
-def home_body(pages, routes, prefix):
+def home_body(pages, routes):
     quote_src = pages[501]["content"] if 501 in pages else ""
     quote = re.sub(r"</?p>", "", strip_gutenberg(quote_src)).strip()
     intro_src = pages[30]["content"] if 30 in pages else ""
     first_para = intro_src.split("\n\n")[0] if intro_src else ""
     intro = wpautop(first_para)
 
+    # Dedication (page 504) surfaced on the home page.
+    ded_parts = [s.strip() for s in re.split(r"\n\s*\n", strip_gutenberg(
+        pages[504]["content"])) if s.strip()] if 504 in pages else []
+    ded_text = re.sub(r"</?p>", "", ded_parts[0]).strip() if ded_parts else ""
+    ded_by = re.sub(r"</?p>", "", ded_parts[1]).strip() if len(ded_parts) > 1 else ""
+
     def card(pid, title, desc):
-        return f"""<a class="card" href="{_href(routes, prefix, pid)}">
+        return f"""<a class="card" href="{abs_href(routes, pid)}">
       <h3>{title}</h3>
       <p>{desc}</p>
       <span class="arrow">Read more &rarr;</span>
@@ -396,6 +439,13 @@ def home_body(pages, routes, prefix):
   <h2 class="section-title">Membership</h2>
   <div class="cards">
     {cards}
+  </div>
+</section>
+<section class="dedication">
+  <div class="container">
+    <p class="section-kicker">Dedication</p>
+    <p class="dedication-text">{ded_text}</p>
+    <p class="dedication-by">{ded_by}</p>
   </div>
 </section>
 """
@@ -493,6 +543,13 @@ ol.membersclass li{margin:.38em 0}
 .card p{color:var(--muted);font-size:1rem;margin:0 0 1em;line-height:1.5}
 .card .arrow{font-family:var(--sans);text-transform:uppercase;letter-spacing:.08em;
   font-size:.78rem;font-weight:700;color:var(--yale)}
+.dedication{background:var(--soft);border-top:1px solid var(--line);
+  padding:60px 26px;text-align:center}
+.dedication .container{max-width:820px}
+.dedication-text{font-family:var(--serif);font-style:italic;font-size:1.35rem;
+  line-height:1.55;color:var(--yale-dk);margin:0 0 .9em}
+.dedication-by{font-family:var(--sans);font-size:.95rem;color:var(--muted);margin:0}
+.dedication-by a{color:var(--yale)}
 
 /* ---- forms ---- */
 .vx-form{margin:1.6em 0;max-width:640px}
@@ -517,8 +574,13 @@ ol.membersclass li{margin:.38em 0}
   padding:22px 24px;border-radius:3px}
 
 /* ---- footer ---- */
-.site-footer{background:var(--yale-dker);color:#c3d0e2;margin-top:0;padding:52px 0 28px}
-.footer-inner{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.site-footer{background:var(--yale-dker);color:#c3d0e2;margin-top:0;padding:0 0 28px}
+.footer-motto{text-align:center;padding:44px 26px 40px;border-bottom:1px solid rgba(255,255,255,.14)}
+.motto-la{font-family:var(--serif);font-style:italic;font-size:1.35rem;color:#fff;margin:0 0 .3em}
+.motto-en{font-family:var(--serif);font-size:1.05rem;color:#c3d0e2;margin:0 0 .5em}
+.motto-cap{font-family:var(--sans);text-transform:uppercase;letter-spacing:.16em;
+  font-size:.72rem;color:var(--gold);margin:0}
+.footer-inner{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;padding-top:44px}
 .footer-name{font-family:var(--serif);font-size:1.5rem;color:#fff}
 .footer-brand p{margin:.6em 0 0;font-size:.92rem;line-height:1.5;color:#9fb2cc}
 .footer-links{display:flex;flex-direction:column;gap:11px}
@@ -552,12 +614,15 @@ def main():
     routes, wp_perma = build_routes(pages)
     rewrite = make_link_rewriter(routes, wp_perma, pages)
 
-    os.makedirs(os.path.join(ROOT, "assets/css"), exist_ok=True)
     write("assets/css/style.css", CSS)
     write(".nojekyll", "")
 
-    # 404 page — served at site root for any unknown path, so it uses
-    # absolute "/" links (correct for a <owner>.github.io root site).
+    # Shared modules — maintained in one place, injected on every page by include.js
+    write("assets/partials/header.html", render_header(routes))
+    write("assets/partials/footer.html", render_footer(routes))
+    write("assets/js/include.js", INCLUDE_JS)
+
+    # 404 page — served at site root for any unknown path (absolute links).
     nf_body = """<div class="prose">
   <p>The page you're looking for doesn't exist or has moved.</p>
   <p class="hero-cta">
@@ -565,27 +630,24 @@ def main():
     <a class="btn" href="/fellows/" style="color:#00356b;border-color:#00356b">Fellows</a>
   </p>
 </div>"""
-    write("404.html", page_template("Page not found",
-          page_banner("Page not found", "/"), nf_body, "/", routes, None))
+    write("404.html", page_template("Page not found", page_banner("Page not found"), nf_body))
 
     count = 0
     for pid, p in pages.items():
         out = routes[pid]
-        prefix = rel_prefix(out)
         if pid == 25:
-            hero = home_hero(prefix, routes)
-            body = home_body(pages, routes, prefix)
+            hero = home_hero(routes)
+            body = home_body(pages, routes)
         elif p["slug"] in ("application", "contact"):
-            hero = page_banner(p["title"], prefix)
+            hero = page_banner(p["title"])
             body = '<div class="prose">\n' + render_form_page(p, routes, wp_perma, pages, rewrite) + '\n</div>'
         else:
-            hero = page_banner(p["title"], prefix)
+            hero = page_banner(p["title"])
             body = '<div class="prose">\n' + wpautop(p["content"]) + '\n</div>'
-        body = apply_rewrites(body, prefix, rewrite)
-        page_out = page_template(p["title"], hero, body, prefix, routes, pid)
-        write(f"{out}index.html", page_out)
+        body = apply_rewrites(body, "/", rewrite)   # absolute links (root-domain site)
+        write(f"{out}index.html", page_template(p["title"], hero, body))
         count += 1
-    print(f"Generated {count} pages.")
+    print(f"Generated {count} pages + shared header/footer/include modules.")
 
 if __name__ == "__main__":
     main()

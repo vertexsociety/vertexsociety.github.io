@@ -5,30 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home — Vertex Society</title>
 <meta name="description" content="Fellows Society For Exceptionally And Profoundly Gifted">
-<link rel="icon" href="assets/img/logo.png">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="/assets/img/logo.png">
+<link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="./">
-      <img class="brand-logo" src="assets/img/logo.png" alt="">
-      <span class="brand-name">Vertex Society</span>
-    </a>
-    <input type="checkbox" id="navtoggle" class="navtoggle">
-    <label for="navtoggle" class="navtoggle-btn" aria-label="Menu">&#9776;</label>
-    <nav class="site-nav">
-<a class="active" href="./">Home</a>
-<a href="about/">About</a>
-<a href="admission/">Admission</a>
-<a href="fellows/">Fellows</a>
-<a href="tests/">Tests</a>
-<a href="about/contact/">Contact</a>
-    </nav>
-  </div>
-</header>
-<section class="hero" style="background-image:url(assets/img/skyline.jpg)">
+<div data-include="/assets/partials/header.html"></div>
+<section class="hero" style="background-image:url(/assets/img/skyline.jpg)">
   <div class="container hero-inner">
     <p class="kicker">Fellows Society For Exceptionally And Profoundly Gifted</p>
     <h1>Order out of chaos.</h1>
@@ -36,8 +19,8 @@
       (sd16) &mdash; a rarity of 1 in 11,000 &mdash; by professional, standardized,
       supervised tests of intelligence only.</p>
     <p class="hero-cta">
-      <a class="btn btn-solid" href="admission/">Admission</a>
-      <a class="btn btn-ghost" href="fellows/">Meet the Fellows</a>
+      <a class="btn btn-solid" href="/admission/">Admission</a>
+      <a class="btn btn-ghost" href="/fellows/">Meet the Fellows</a>
     </p>
   </div>
 </section>
@@ -56,45 +39,33 @@
   <p class="section-kicker">Explore</p>
   <h2 class="section-title">Membership</h2>
   <div class="cards">
-    <a class="card" href="admission/">
+    <a class="card" href="/admission/">
       <h3>Admission</h3>
       <p>Membership is free and open to anyone scoring at or above 3.75 standard deviations above the mean on a professional, standardized test.</p>
       <span class="arrow">Read more &rarr;</span>
     </a>
-    <a class="card" href="tests/">
+    <a class="card" href="/tests/">
       <h3>Qualifying Tests</h3>
       <p>The professional, standardized tests of intelligence recognized for admission, and the score each requires.</p>
       <span class="arrow">Read more &rarr;</span>
     </a>
-    <a class="card" href="fellows/">
+    <a class="card" href="/fellows/">
       <h3>Fellows</h3>
       <p>The Fellows of the Vertex Society, listed with their first spoken languages and places of residence.</p>
       <span class="arrow">Read more &rarr;</span>
     </a>
   </div>
 </section>
+<section class="dedication">
+  <div class="container">
+    <p class="section-kicker">Dedication</p>
+    <p class="dedication-text">This society is dedicated to every individual that has ever contributed to the advance of knowledge and betterment of human conditions, and to every knowledge seeker that is yet to do so.</p>
+    <p class="dedication-by"><a href="/fellows/stephan-w-d/"><em>Vertex Society Founder</em></a> <em>(2006)</em></p>
+  </div>
+</section>
 
 </main>
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <div class="footer-brand">
-      <span class="footer-name">Vertex Society</span>
-      <p>Fellows Society For Exceptionally And Profoundly Gifted.<br>Founded 2006.</p>
-    </div>
-    <nav class="footer-links">
-<a href="about/">About</a>
-<a href="admission/">Admission</a>
-<a href="fellows/">Fellows</a>
-<a href="tests/">Tests</a>
-<a href="about/contact/">Contact</a>
-<a href="dedication/">Dedication</a>
-<a href="about/faq/">FAQ</a>
-<a href="fellows/distinguished-fellows-selection/">Distinguished Fellows Selection</a>
-    </nav>
-  </div>
-  <div class="container footer-bottom">
-    <p>&copy; 2006&ndash;2026 Vertex Society. An International Nonprofit Association.</p>
-  </div>
-</footer>
+<div data-include="/assets/partials/footer.html"></div>
+<script src="/assets/js/include.js" defer></script>
 </body>
 </html>
