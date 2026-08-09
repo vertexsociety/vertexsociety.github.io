@@ -255,7 +255,7 @@ def render_form_page(page, routes, wp_perma, pages, rewrite):
     return before + "\n" + form_html + "\n" + after
 
 # ----------------------------------------------------------------------------
-# 6. Template
+# 6. Template  (Yale-inspired: blue + white, serif display, photographic hero)
 # ----------------------------------------------------------------------------
 NAV = [  # (label, target page id)
     ("Home", 25), ("About", 30), ("Admission", 31),
@@ -263,24 +263,47 @@ NAV = [  # (label, target page id)
 ]
 FOOTER = [("Dedication", 504), ("FAQ", 79), ("Distinguished Fellows Selection", 294)]
 
+def _href(routes, prefix, pid):
+    d = routes[pid]
+    return prefix + d if d else (prefix or "./")
+
 def nav_html(routes, prefix, current_id):
     out = []
     for label, pid in NAV:
-        d = routes[pid]
-        href = prefix + d if d else (prefix or "./")
         cls = ' class="active"' if pid == current_id else ""
-        out.append(f'<a{cls} href="{href}">{label}</a>')
+        out.append(f'<a{cls} href="{_href(routes, prefix, pid)}">{label}</a>')
     return "\n".join(out)
 
-def footer_html(routes, prefix):
-    out = []
-    for label, pid in FOOTER:
-        d = routes[pid]
-        href = prefix + d if d else (prefix or "./")
-        out.append(f'<a href="{href}">{label}</a>')
-    return " · ".join(out)
+def footer_nav(routes, prefix):
+    items = NAV[1:] + FOOTER  # skip Home
+    return "\n".join(
+        f'<a href="{_href(routes, prefix, pid)}">{label}</a>' for label, pid in items)
 
-def page_template(title, body, prefix, routes, current_id):
+def page_banner(title, prefix):
+    """Blue title band with the skyline faintly behind — used on interior pages."""
+    return f"""<section class="banner" style="background-image:url({prefix}assets/img/skyline.jpg)">
+  <div class="container banner-inner">
+    <p class="kicker">Vertex Society</p>
+    <h1>{html.escape(title)}</h1>
+  </div>
+</section>"""
+
+def home_hero(prefix, routes):
+    return f"""<section class="hero" style="background-image:url({prefix}assets/img/skyline.jpg)">
+  <div class="container hero-inner">
+    <p class="kicker">{SITE_DESC}</p>
+    <h1>Order out of chaos.</h1>
+    <p class="lead">An international society admitting Fellows at or above 160&nbsp;IQ
+      (sd16) &mdash; a rarity of 1 in 11,000 &mdash; by professional, standardized,
+      supervised tests of intelligence only.</p>
+    <p class="hero-cta">
+      <a class="btn btn-solid" href="{_href(routes, prefix, 31)}">Admission</a>
+      <a class="btn btn-ghost" href="{_href(routes, prefix, 32)}">Meet the Fellows</a>
+    </p>
+  </div>
+</section>"""
+
+def page_template(title, hero, body, prefix, routes, current_id):
     home = prefix or "./"
     return f"""<!doctype html>
 <html lang="en">
@@ -301,19 +324,28 @@ def page_template(title, body, prefix, routes, current_id):
       <span class="brand-name">{SITE_NAME}</span>
     </a>
     <input type="checkbox" id="navtoggle" class="navtoggle">
-    <label for="navtoggle" class="navtoggle-btn" aria-label="Menu">≡</label>
+    <label for="navtoggle" class="navtoggle-btn" aria-label="Menu">&#9776;</label>
     <nav class="site-nav">
 {nav_html(routes, prefix, current_id)}
     </nav>
   </div>
 </header>
-<main id="main" class="container content">
+{hero}
+<main id="main">
 {body}
 </main>
 <footer class="site-footer">
-  <div class="container">
-    <p class="footer-tag">{SITE_NAME} — {SITE_DESC}. Founded 2006.</p>
-    <p class="footer-links">{footer_html(routes, prefix)}</p>
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="footer-name">{SITE_NAME}</span>
+      <p>{SITE_DESC}.<br>Founded 2006.</p>
+    </div>
+    <nav class="footer-links">
+{footer_nav(routes, prefix)}
+    </nav>
+  </div>
+  <div class="container footer-bottom">
+    <p>&copy; 2006&ndash;2026 {SITE_NAME}. An International Nonprofit Association.</p>
   </div>
 </footer>
 </body>
@@ -324,28 +356,47 @@ def page_template(title, body, prefix, routes, current_id):
 # 7. Home page (WP front page has no content) — compose a landing page
 # ----------------------------------------------------------------------------
 def home_body(pages, routes, prefix):
-    quote = wpautop(pages[501]["content"]) if 501 in pages else ""
+    quote_src = pages[501]["content"] if 501 in pages else ""
+    quote = re.sub(r"</?p>", "", strip_gutenberg(quote_src)).strip()
     intro_src = pages[30]["content"] if 30 in pages else ""
     first_para = intro_src.split("\n\n")[0] if intro_src else ""
     intro = wpautop(first_para)
-    def link(pid, label):
-        d = routes[pid]
-        return f'<a class="btn" href="{(prefix + d) if d else (prefix or "./")}">{label}</a>'
-    return f"""<section class="hero">
-  <img class="hero-logo" src="{prefix}assets/img/logo.png" alt="">
-  <h1>{SITE_NAME}</h1>
-  <p class="hero-tag">{SITE_DESC}</p>
-</section>
-<section class="home-quote">
-{quote}
-</section>
-<section class="home-intro">
+
+    def card(pid, title, desc):
+        return f"""<a class="card" href="{_href(routes, prefix, pid)}">
+      <h3>{title}</h3>
+      <p>{desc}</p>
+      <span class="arrow">Read more &rarr;</span>
+    </a>"""
+
+    cards = "\n    ".join([
+        card(31, "Admission",
+             "Membership is free and open to anyone scoring at or above 3.75 standard "
+             "deviations above the mean on a professional, standardized test."),
+        card(33, "Qualifying Tests",
+             "The professional, standardized tests of intelligence recognized for "
+             "admission, and the score each requires."),
+        card(32, "Fellows",
+             "The Fellows of the Vertex Society, listed with their first spoken "
+             "languages and places of residence."),
+    ])
+
+    return f"""<section class="lead-sec">
+  <div class="prose">
 {intro}
+  </div>
 </section>
-<section class="home-cta">
-  {link(31,"Admission")}
-  {link(33,"Qualifying Tests")}
-  {link(32,"Fellows")}
+<section class="quote-band">
+  <div class="container">
+    <p>{quote}</p>
+  </div>
+</section>
+<section class="home-section">
+  <p class="section-kicker">Explore</p>
+  <h2 class="section-title">Membership</h2>
+  <div class="cards">
+    {cards}
+  </div>
 </section>
 """
 
@@ -353,86 +404,137 @@ def home_body(pages, routes, prefix):
 # 8. CSS
 # ----------------------------------------------------------------------------
 CSS = r""":root{
-  --ink:#1c2230; --muted:#5a6376; --bg:#ffffff; --soft:#f4f5f8;
-  --line:#e2e5ec; --accent:#3a4a7a; --accent-dark:#26325a; --maxw:820px;
+  --yale:#00356b; --yale-dk:#00234a; --yale-dker:#001832;
+  --ink:#20242c; --muted:#5b6472; --line:#dfe3ea; --soft:#f5f6f8;
+  --gold:#cbb069;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;font-family:Georgia,"Times New Roman",serif;color:var(--ink);
-  background:var(--bg);line-height:1.65;font-size:18px}
-.container{max-width:var(--maxw);margin:0 auto;padding:0 20px}
-.content{padding:38px 20px 60px}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:#fff;
+  line-height:1.62;font-size:18px}
 img{max-width:100%;height:auto}
-h1,h2,h3{line-height:1.25;color:var(--accent-dark);font-weight:600}
-h2{margin-top:1.8em;border-bottom:1px solid var(--line);padding-bottom:.3em}
-p{margin:0 0 1.1em}
-ul,ol{margin:0 0 1.1em;padding-left:1.4em}
-li{margin:.25em 0}
+a{color:var(--yale);text-decoration:none}
+h1,h2,h3,h4{font-family:var(--serif);color:var(--yale);line-height:1.18;font-weight:600}
+.container{max-width:1160px;margin:0 auto;padding:0 26px}
 .skip{position:absolute;left:-999px}
-.skip:focus{left:8px;top:8px;background:#fff;padding:8px;z-index:10}
+.skip:focus{left:8px;top:8px;background:#fff;padding:8px;z-index:20}
 
-/* header */
-.site-header{background:var(--accent-dark);color:#fff;position:sticky;top:0;z-index:5}
-.header-inner{display:flex;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;color:#fff;font-weight:600}
-.brand:hover{text-decoration:none}
-.brand-logo{width:34px;height:34px}
-.brand-name{font-size:1.15rem;letter-spacing:.02em}
-.site-nav{margin-left:auto;display:flex;gap:20px;flex-wrap:wrap}
-.site-nav a{color:#d7ddf0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  font-size:.95rem;letter-spacing:.02em}
-.site-nav a:hover,.site-nav a.active{color:#fff;text-decoration:none}
+/* ---- header ---- */
+.site-header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.header-inner{display:flex;align-items:center;gap:18px;min-height:82px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:13px;color:var(--yale)}
+.brand-logo{width:40px;height:40px}
+.brand-name{font-family:var(--serif);font-size:1.6rem;font-weight:600;letter-spacing:.01em}
+.site-nav{margin-left:auto;display:flex;gap:26px;flex-wrap:wrap}
+.site-nav a{font-family:var(--sans);font-size:.78rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--yale);padding:6px 0;border-bottom:2px solid transparent}
+.site-nav a:hover{border-bottom-color:var(--gold)}
+.site-nav a.active{border-bottom-color:var(--yale)}
 .navtoggle,.navtoggle-btn{display:none}
 
-/* home */
-.hero{text-align:center;padding:34px 0 8px}
-.hero-logo{width:96px;height:96px}
-.hero h1{font-size:2.4rem;margin:.35em 0 .1em}
-.hero-tag{color:var(--muted);font-style:italic;font-size:1.15rem;margin:0}
-.home-quote{font-size:1.2rem;text-align:center;color:var(--accent-dark);
-  max-width:640px;margin:28px auto;font-style:italic}
-.home-intro{color:var(--ink)}
-.home-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:30px 0 10px}
-.btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 22px;border-radius:4px;
-  font-family:system-ui,sans-serif;font-size:1rem}
-.btn:hover{background:var(--accent-dark);text-decoration:none}
+/* ---- hero (home) ---- */
+.hero{position:relative;background:var(--yale-dk) center/cover no-repeat;color:#fff;
+  display:flex;align-items:flex-end;min-height:74vh}
+.hero::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,35,107,.30) 0%,rgba(0,24,50,.55) 55%,rgba(0,24,50,.90) 100%)}
+.hero-inner{position:relative;z-index:1;padding:70px 26px 60px}
+.kicker{font-family:var(--sans);text-transform:uppercase;letter-spacing:.18em;
+  font-size:.8rem;font-weight:700;color:var(--gold);margin:0 0 .8em}
+.hero h1{color:#fff;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.02;margin:0;max-width:16ch}
+.hero .lead{font-size:1.2rem;line-height:1.55;color:#e9eef5;max-width:52ch;margin:1.1em 0 0}
+.hero-cta{margin:1.8em 0 0;display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;font-family:var(--sans);font-weight:700;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:.09em;padding:14px 28px;border-radius:2px;
+  border:2px solid transparent;cursor:pointer}
+.btn-solid{background:#fff;color:var(--yale);border-color:#fff}
+.btn-solid:hover{background:var(--gold);border-color:var(--gold);color:var(--yale-dk)}
+.btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.7)}
+.btn-ghost:hover{background:#fff;color:var(--yale)}
 
-/* misc content helpers carried from the old theme */
-.largefont{font-size:1.08rem}
-ol.membersclass,ul.regular,ol.olnumbers{}
-ol.membersclass li{margin:.35em 0}
+/* ---- interior banner ---- */
+.banner{position:relative;background:var(--yale-dk) center/cover no-repeat;color:#fff}
+.banner::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,35,107,.85),rgba(0,24,50,.9))}
+.banner-inner{position:relative;z-index:1;padding:52px 26px 46px}
+.banner h1{color:#fff;font-size:clamp(2rem,4.5vw,3.2rem);margin:0}
+.banner .kicker{color:var(--gold);margin-bottom:.55em}
 
-/* forms */
-.vx-form{margin:1.5em 0;max-width:640px}
-.vx-form .field{margin-bottom:1.1em}
-.vx-form label{display:block;font-family:system-ui,sans-serif;font-size:.95rem;
-  font-weight:600;margin-bottom:.35em;color:var(--accent-dark)}
+/* ---- reading content ---- */
+.prose{max-width:820px;margin:0 auto;padding:52px 26px 76px}
+.prose p{margin:0 0 1.15em}
+.prose h2{font-size:1.7rem;margin:1.9em 0 .55em;padding-bottom:.28em;
+  border-bottom:2px solid var(--line)}
+.prose h3{font-size:1.3rem;margin:1.6em 0 .4em}
+.prose a{text-decoration:underline;text-decoration-color:rgba(0,53,107,.35);text-underline-offset:2px}
+.prose a:hover{text-decoration-color:var(--yale)}
+.prose ul,.prose ol{margin:0 0 1.15em;padding-left:1.4em}
+.prose li{margin:.3em 0}
+.prose img{border:1px solid var(--line)}
+.largefont{font-size:1.1rem;color:#333}
+ol.membersclass li{margin:.38em 0}
+
+/* ---- home sections ---- */
+.lead-sec .prose{padding-bottom:8px}
+.lead-sec .prose p{font-size:1.24rem;line-height:1.6;color:#33383f}
+.quote-band{background:var(--yale);color:#fff;padding:56px 26px;margin:40px 0 0;text-align:center}
+.quote-band p{font-family:var(--serif);font-style:italic;font-size:1.5rem;line-height:1.5;
+  max-width:820px;margin:0 auto;color:#eaf0f7}
+.home-section{max-width:1160px;margin:0 auto;padding:60px 26px 72px;text-align:center}
+.section-kicker{font-family:var(--sans);text-transform:uppercase;letter-spacing:.18em;
+  font-size:.78rem;font-weight:700;color:var(--gold);margin:0 0 .3em}
+.section-title{font-size:2rem;margin:0 0 1.4em}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:26px;text-align:left}
+.card{display:block;background:#fff;border:1px solid var(--line);border-top:4px solid var(--yale);
+  padding:28px 26px;color:var(--ink);transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(0,35,107,.14)}
+.card h3{font-size:1.45rem;margin:0 0 .5em}
+.card p{color:var(--muted);font-size:1rem;margin:0 0 1em;line-height:1.5}
+.card .arrow{font-family:var(--sans);text-transform:uppercase;letter-spacing:.08em;
+  font-size:.78rem;font-weight:700;color:var(--yale)}
+
+/* ---- forms ---- */
+.vx-form{margin:1.6em 0;max-width:640px}
+.vx-form .field{margin-bottom:1.15em}
+.vx-form label{display:block;font-family:var(--sans);font-size:.9rem;font-weight:600;
+  margin-bottom:.4em;color:var(--yale)}
 .vx-form input[type=text],.vx-form input[type=email],.vx-form input[type=url],
-.vx-form textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:4px;
-  font:inherit;font-size:1rem;background:var(--soft)}
+.vx-form textarea{width:100%;padding:11px 13px;border:1px solid #c9ced9;border-radius:3px;
+  font:inherit;font-size:1rem;background:#fff}
+.vx-form input:focus,.vx-form textarea:focus{outline:none;border-color:var(--yale);
+  box-shadow:0 0 0 3px rgba(0,53,107,.12)}
 .vx-form textarea{resize:vertical}
-.vx-form .radio-group{display:flex;gap:18px;flex-wrap:wrap}
-.vx-form label.radio{font-weight:400;display:inline-flex;align-items:center;gap:6px}
-.vx-form button{background:var(--accent);color:#fff;border:0;padding:12px 28px;border-radius:4px;
-  font-family:system-ui,sans-serif;font-size:1rem;cursor:pointer}
-.vx-form button:hover{background:var(--accent-dark)}
+.vx-form .radio-group{display:flex;gap:20px;flex-wrap:wrap}
+.vx-form label.radio{font-weight:400;display:inline-flex;align-items:center;gap:7px;color:var(--ink)}
+.vx-form button{background:var(--yale);color:#fff;border:0;padding:14px 34px;border-radius:2px;
+  font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  font-size:.82rem;cursor:pointer}
+.vx-form button:hover{background:var(--yale-dk)}
 .req{color:#b23}
-.form-note{font-family:system-ui,sans-serif;font-size:.85rem;color:var(--muted)}
-.form-thanks{background:var(--soft);border:1px solid var(--line);padding:20px;border-radius:6px}
+.form-note{font-family:var(--sans);font-size:.85rem;color:var(--muted)}
+.form-thanks{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--yale);
+  padding:22px 24px;border-radius:3px}
 
-/* footer */
-.site-footer{background:var(--soft);border-top:1px solid var(--line);
-  margin-top:40px;padding:26px 0;color:var(--muted)}
-.footer-tag{margin:0 0 .4em;font-size:.95rem}
-.footer-links{margin:0;font-family:system-ui,sans-serif;font-size:.9rem}
+/* ---- footer ---- */
+.site-footer{background:var(--yale-dker);color:#c3d0e2;margin-top:0;padding:52px 0 28px}
+.footer-inner{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.footer-name{font-family:var(--serif);font-size:1.5rem;color:#fff}
+.footer-brand p{margin:.6em 0 0;font-size:.92rem;line-height:1.5;color:#9fb2cc}
+.footer-links{display:flex;flex-direction:column;gap:11px}
+.footer-links a{font-family:var(--sans);font-size:.82rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.07em;color:#c3d0e2}
+.footer-links a:hover{color:#fff}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.16);margin-top:36px;padding-top:20px}
+.footer-bottom p{margin:0;font-size:.82rem;color:#8ea3c0}
 
-@media(max-width:680px){
+@media(max-width:760px){
   body{font-size:17px}
-  .navtoggle-btn{display:inline-block;margin-left:auto;font-size:1.6rem;
-    cursor:pointer;color:#fff;line-height:1;padding:4px 8px}
-  .site-nav{display:none;flex-direction:column;width:100%;gap:10px;padding:10px 0 4px;margin:0}
+  .hero{min-height:64vh}
+  .navtoggle-btn{display:inline-block;margin-left:auto;font-size:1.5rem;
+    cursor:pointer;color:var(--yale);line-height:1;padding:4px 8px}
+  .site-nav{display:none;flex-direction:column;width:100%;gap:2px;padding:6px 0 10px;margin:0}
+  .site-nav a{padding:9px 0}
   .navtoggle:checked ~ .site-nav{display:flex}
 }
 """
@@ -456,33 +558,31 @@ def main():
 
     # 404 page — served at site root for any unknown path, so it uses
     # absolute "/" links (correct for a <owner>.github.io root site).
-    nf_body = """<section class="hero" style="padding-top:10px">
-  <img class="hero-logo" src="/assets/img/logo.png" alt="">
-  <h1>Page not found</h1>
-  <p class="hero-tag">The page you're looking for doesn't exist or has moved.</p>
-</section>
-<section class="home-cta">
-  <a class="btn" href="/">Return home</a>
-  <a class="btn" href="/fellows/">Fellows</a>
-  <a class="btn" href="/admission/">Admission</a>
-</section>"""
-    write("404.html", page_template("Page not found", nf_body, "/", routes, None))
+    nf_body = """<div class="prose">
+  <p>The page you're looking for doesn't exist or has moved.</p>
+  <p class="hero-cta">
+    <a class="btn btn-solid" href="/" style="color:#fff;border-color:#00356b;background:#00356b">Return home</a>
+    <a class="btn" href="/fellows/" style="color:#00356b;border-color:#00356b">Fellows</a>
+  </p>
+</div>"""
+    write("404.html", page_template("Page not found",
+          page_banner("Page not found", "/"), nf_body, "/", routes, None))
 
     count = 0
     for pid, p in pages.items():
         out = routes[pid]
         prefix = rel_prefix(out)
-        # body
         if pid == 25:
+            hero = home_hero(prefix, routes)
             body = home_body(pages, routes, prefix)
         elif p["slug"] in ("application", "contact"):
-            body = render_form_page(p, routes, wp_perma, pages, rewrite)
-            body = f'<h1>{html.escape(p["title"])}</h1>\n' + body
+            hero = page_banner(p["title"], prefix)
+            body = '<div class="prose">\n' + render_form_page(p, routes, wp_perma, pages, rewrite) + '\n</div>'
         else:
-            body = wpautop(p["content"])
-            body = f'<h1>{html.escape(p["title"])}</h1>\n' + body
+            hero = page_banner(p["title"], prefix)
+            body = '<div class="prose">\n' + wpautop(p["content"]) + '\n</div>'
         body = apply_rewrites(body, prefix, rewrite)
-        page_out = page_template(p["title"], body, prefix, routes, pid)
+        page_out = page_template(p["title"], hero, body, prefix, routes, pid)
         write(f"{out}index.html", page_out)
         count += 1
     print(f"Generated {count} pages.")
