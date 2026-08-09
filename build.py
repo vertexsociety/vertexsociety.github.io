@@ -454,6 +454,20 @@ def main():
     write("assets/css/style.css", CSS)
     write(".nojekyll", "")
 
+    # 404 page — served at site root for any unknown path, so it uses
+    # absolute "/" links (correct for a <owner>.github.io root site).
+    nf_body = """<section class="hero" style="padding-top:10px">
+  <img class="hero-logo" src="/assets/img/logo.png" alt="">
+  <h1>Page not found</h1>
+  <p class="hero-tag">The page you're looking for doesn't exist or has moved.</p>
+</section>
+<section class="home-cta">
+  <a class="btn" href="/">Return home</a>
+  <a class="btn" href="/fellows/">Fellows</a>
+  <a class="btn" href="/admission/">Admission</a>
+</section>"""
+    write("404.html", page_template("Page not found", nf_body, "/", routes, None))
+
     count = 0
     for pid, p in pages.items():
         out = routes[pid]
