@@ -517,7 +517,8 @@ h1,h2,h3,h4{font-family:var(--serif);color:var(--yale);line-height:1.18;font-wei
 .banner-inner{position:relative;z-index:1;padding:52px 26px 46px;
   text-shadow:0 1px 14px rgba(0,18,40,.55)}
 .banner h1{color:#fff;font-size:clamp(2rem,4.5vw,3.2rem);margin:0}
-.banner .kicker{color:var(--gold);margin-bottom:.55em}
+.banner .kicker{color:#e6c884;margin-bottom:.55em;
+  text-shadow:0 1px 2px rgba(0,12,30,.9),0 0 16px rgba(0,12,30,.6)}
 
 /* ---- reading content ---- */
 .prose{max-width:820px;margin:0 auto;padding:52px 26px 76px}
