@@ -176,6 +176,40 @@ def wpautop(text):
 # ----------------------------------------------------------------------------
 # 5. Contact-form shortcode  ->  Google-Forms-connected HTML form
 # ----------------------------------------------------------------------------
+# Google Forms wiring. To connect a form: set "action" to its .../formResponse
+# URL and map each field key -> entry.<id> from the live form. Field keys are
+# field_key(label) (lowercase, non-alphanumerics -> "_"). Any field not listed
+# falls back to an entry.REPLACE_* placeholder. Leave a form out entirely to keep
+# it fully on placeholders.
+FORM_CONFIG = {
+    "application": {
+        "action": "https://docs.google.com/forms/d/e/"
+                  "1FAIpQLSfsjzEWiQzfz0Rez7qZNXggJaOz6Uq4sShHdFZOmeEkbBGmPA/formResponse",
+        "entries": {
+            "test_s_and_score_s_you_wish_to_submit": "entry.1707064076",
+            "first_name":              "entry.1292067187",
+            "middle_name":             "entry.126964088",
+            "last_name":               "entry.1626451527",
+            "gender":                  "entry.1603117851",
+            "birth_year":              "entry.2012472285",
+            "your_email":              "entry.1044577070",
+            "street":                  "entry.676065985",
+            "postal_code":             "entry.2004101868",
+            "city":                    "entry.1386069666",
+            "phone_number":            "entry.302508348",
+            "country":                 "entry.634898529",
+            "first_spoken_language":   "entry.1213292129",
+            "occupation":              "entry.1540008191",
+            "education":               "entry.449955384",
+            "hiq_society_memberships": "entry.1847616833",
+            "interests":               "entry.1571417073",
+            "website":                 "entry.1309912525",
+            "comment":                 "entry.833545571",
+        },
+    },
+    # "contact": {"action": ".../formResponse", "entries": {"name": "...", ...}},
+}
+
 def parse_contact_fields(shortcode):
     fields = []
     for fm in re.finditer(r"\[contact-field\s+(.*?)\]", shortcode, re.S):
@@ -187,19 +221,22 @@ def field_key(label):
     return re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
 
 def render_google_form(fields, form_slug):
-    """form_slug: 'application' or 'contact' -> distinct placeholder namespace."""
-    action_token = f"GOOGLE_FORM_ACTION_{form_slug.upper()}"
+    """form_slug: 'application' or 'contact'. Uses FORM_CONFIG if present,
+    otherwise emits entry.REPLACE_* placeholders + a mapping comment."""
+    cfg = FORM_CONFIG.get(form_slug, {})
+    entries = cfg.get("entries", {})
+    action = cfg.get("action") or f"GOOGLE_FORM_ACTION_{form_slug.upper()}"
     iframe = f"gform_target_{form_slug}"
     rows = []
-    mapping_comment = ["    <!-- Google Form field mapping — replace each entry.REPLACE_* "
-                       "with the real entry.<id> from your Google Form:"]
+    unmapped = []
     for f in fields:
         label = f.get("label", "").strip()
         ftype = f.get("type", "text")
         required = f.get("required", "") in ("1", "true", "yes")
         key = field_key(label)
-        name = f"entry.REPLACE_{form_slug}_{key}"
-        mapping_comment.append(f"         {label!r:45} -> {name}")
+        name = entries.get(key) or f"entry.REPLACE_{form_slug}_{key}"
+        if key not in entries:
+            unmapped.append((label, name))
         req_attr = " required" if required else ""
         star = ' <span class="req">*</span>' if required else ""
         fid = f"f_{form_slug}_{key}"
@@ -223,11 +260,15 @@ def render_google_form(fields, form_slug):
             f'      <label for="{fid}">{html.escape(label)}{star}</label>\n'
             f'      {control}\n'
             f'    </div>')
-    mapping_comment.append("    -->")
-    mapping = "\n".join(mapping_comment)
+    if unmapped:
+        mc = ["    <!-- Unmapped fields — add each to FORM_CONFIG['%s']['entries']:" % form_slug]
+        mc += [f"         {lbl!r:45} -> {nm}" for lbl, nm in unmapped]
+        mc.append("    -->\n")
+        mapping = "\n".join(mc)
+    else:
+        mapping = ""
     body = "\n".join(rows)
-    return f"""{mapping}
-    <form class="vx-form" action="{action_token}" method="POST"
+    return f"""{mapping}    <form class="vx-form" action="{action}" method="POST"
           target="{iframe}" onsubmit="this.dataset.sent='1';">
 {body}
       <div class="field">
