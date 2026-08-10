@@ -207,7 +207,15 @@ FORM_CONFIG = {
             "comment":                 "entry.833545571",
         },
     },
-    # "contact": {"action": ".../formResponse", "entries": {"name": "...", ...}},
+    "contact": {
+        "action": "https://docs.google.com/forms/d/e/"
+                  "1FAIpQLSej9BYeT4hY6nbBbjI4tOO0_I7XOQP3R3_8WQAIQHJ-NUfXqg/formResponse",
+        "entries": {
+            "name":         "entry.1226186745",
+            "email":        "entry.773623361",
+            "your_message": "entry.1172621546",
+        },
+    },
 }
 
 def parse_contact_fields(shortcode):
