@@ -499,6 +499,8 @@ h1,h2,h3,h4{font-family:var(--serif);color:var(--yale);line-height:1.18;font-wei
 .hero-inner{position:relative;z-index:1;padding:70px 26px 60px}
 .kicker{font-family:var(--sans);text-transform:uppercase;letter-spacing:.18em;
   font-size:.8rem;font-weight:700;color:var(--gold);margin:0 0 .8em}
+.hero .kicker{color:#e6c884;
+  text-shadow:0 1px 2px rgba(0,12,30,.9),0 0 16px rgba(0,12,30,.6)}
 .hero h1{color:#fff;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.02;margin:0;max-width:16ch}
 .hero .lead{font-size:1.2rem;line-height:1.55;color:#e9eef5;max-width:52ch;margin:1.1em 0 0}
 .hero-cta{margin:1.8em 0 0;display:flex;gap:14px;flex-wrap:wrap}
