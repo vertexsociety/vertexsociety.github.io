@@ -513,8 +513,9 @@ h1,h2,h3,h4{font-family:var(--serif);color:var(--yale);line-height:1.18;font-wei
 /* ---- interior banner ---- */
 .banner{position:relative;background:var(--yale-dk) center/cover no-repeat;color:#fff}
 .banner::before{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(0,35,107,.85),rgba(0,24,50,.9))}
-.banner-inner{position:relative;z-index:1;padding:52px 26px 46px}
+  background:linear-gradient(180deg,rgba(0,35,107,.30),rgba(0,24,50,.45))}
+.banner-inner{position:relative;z-index:1;padding:52px 26px 46px;
+  text-shadow:0 1px 14px rgba(0,18,40,.55)}
 .banner h1{color:#fff;font-size:clamp(2rem,4.5vw,3.2rem);margin:0}
 .banner .kicker{color:var(--gold);margin-bottom:.55em}
 
