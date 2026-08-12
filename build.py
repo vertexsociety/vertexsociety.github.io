@@ -425,6 +425,7 @@ def page_template(title, hero, body):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} — {SITE_NAME}</title>
 <meta name="description" content="{SITE_DESC}">
+<meta name="google-site-verification" content="3PKZuE2sKOJobYjLxjf2e5FkToGl0DOKR3hJTSYNs-c" />
 <link rel="icon" href="/assets/img/logo.png">
 <link rel="stylesheet" href="/assets/css/fonts.css">
 <link rel="stylesheet" href="/assets/css/style.css">
