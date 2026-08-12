@@ -13,11 +13,12 @@ The two Jetpack contact forms (Application, Contact) are re-created as plain HTM
 forms that POST to Google Forms. Fill in the placeholders marked GOOGLE_FORM_*
 after you create the matching Google Form (see README.md).
 """
-import re, os, glob, html
+import re, os, glob, html, datetime
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SITE_NAME = "Vertex Society"
 SITE_DESC = "Fellows Society For Exceptionally And Profoundly Gifted"
+SITE_URL = "https://vertexsociety.github.io/"
 
 # ----------------------------------------------------------------------------
 # 1. Parse the export
@@ -708,7 +709,21 @@ def main():
         body = apply_rewrites(body, "/", rewrite)   # absolute links (root-domain site)
         write(f"{out}index.html", page_template(p["title"], hero, body))
         count += 1
-    print(f"Generated {count} pages + shared header/footer/include modules.")
+
+    # sitemap.xml + robots.txt (for Google Search Console)
+    today = datetime.date.today().isoformat()
+    locs = sorted(SITE_URL + routes[pid] for pid in pages)
+    urls = "\n".join(
+        f"  <url><loc>{loc}</loc><lastmod>{today}</lastmod></url>" for loc in locs)
+    write("sitemap.xml",
+          '<?xml version="1.0" encoding="UTF-8"?>\n'
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+          f"{urls}\n</urlset>\n")
+    write("robots.txt",
+          "User-agent: *\nAllow: /\n\n"
+          f"Sitemap: {SITE_URL}sitemap.xml\n")
+
+    print(f"Generated {count} pages + shared modules + sitemap.xml + robots.txt.")
 
 if __name__ == "__main__":
     main()
